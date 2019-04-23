@@ -10,7 +10,8 @@ setup(name='dynamic_obstacle_avoidance',
       packages=['dynamic_obstacle_avoidance',
                 'dynamic_obstacle_avoidance.dynamical_system',
                 'dynamic_obstacle_avoidance.obstacle_avoidance',
-                'dynamic_obstacle_avoidance.visualization'],
+                'dynamic_obstacle_avoidance.visualization',
+                'dynamic_obstacle_avoidance.graphical_interface'],
       scripts=['scripts/examples_animation.py', 'scripts/examples_vector_field.py'],
       package_dir={'': 'src'}
      )
