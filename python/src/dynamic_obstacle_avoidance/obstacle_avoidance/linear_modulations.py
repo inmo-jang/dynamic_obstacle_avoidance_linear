@@ -16,8 +16,7 @@ import warnings
 
 import sys
 
-def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPow = 2):
-    
+def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPow=1):
     # This function modulates the dynamical system at position x and dynamics xd such that it avoids all obstacles obs. It can furthermore be forced to converge to the attractor. 
     # 
     # INPUT
@@ -35,8 +34,10 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
     N_obs = len(obs) #number of obstacles
     if N_obs ==0:
         return xd
+
+    dim = x.shape[0]
+    d = dim # TODO -- old variable, remove
     
-    d = x.shape[0]
     Gamma = np.zeros((N_obs))
 
     if type(attractor)==str:
@@ -74,14 +75,14 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
         E[:,:,n], D[:,:,n], Gamma[n], E_orth[:,:,n] = compute_modulation_matrix(x_t,obs[n], R[:,:,n])
         
     if N_attr:
-        d_a = LA.norm(x - np.array(attractor)) # Distance to attractor
+        d_a = LA.norm(x - np.array(attractor)) # Distbance to attractor
         weight = compute_weights(np.hstack((Gamma, [d_a])), N_obs+N_attr)
 
     else:
         weight = compute_weights(Gamma, N_obs)
     xd_obs = np.zeros((d))
 
-    
+
     for n in range(N_obs):
         if d==2:
             xd_w = np.cross(np.hstack(([0,0], obs[n].w)),
@@ -97,8 +98,15 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
         xd_obs_n = exp_weight*(np.array(obs[n].xd) + xd_w)
 
         xd_obs_n = E_orth[:,:,n].T @ xd_obs_n
-        xd_obs_n[0] = np.max([xd_obs_n[0], 0]) # Onl use orthogonal part 
+        # xd_obs_n[0] = np.max([xd_obs_n[0], 0]) # Only use orthogonal part
+        xd_obs_n[0] = np.max(xd_obs_n[0], 0) # Only use orthogonal part
+        # xd_obs_n[0] = np.min([xd_obs_n[0], 0]) # Only use orthogonal part 
         xd_obs_n = E_orth[:,:,n] @ xd_obs_n
+
+        # xd_obs_n = E[:,:,n].T @ xd_obs_n
+        # xd_obs_n[0] = np.max([xd_obs_n[0], 0]) # Only use orthogonal part
+        # xd_obs_n[0] = np.min([xd_obs_n[0], 0]) # Only use orthogonal part 
+        # xd_obs_n = E[:,:,n] @ xd_obs_n
         
         xd_obs = xd_obs + xd_obs_n*weight[n]
 
@@ -113,7 +121,6 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
         xd_normalized=xd
 
     xd_t = np.array([xd_normalized[1], -xd_normalized[0]])
-
     Rf = np.array([xd_normalized, xd_t]).T
 
     
@@ -125,6 +132,13 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
         M[:,:,n] = R[:,:,n] @ E[:,:,n] @ D[:,:,n] @ LA.pinv(E[:,:,n]) @ R[:,:,n].T
         
         xd_hat[:,n] = M[:,:,n] @ xd # velocity modulation
+
+        # Safety (Remove for pure algorithm)
+        if Gamma[n] < 1:
+            repulsive_velocity =  ((1/Gamma[n])**5-1)*5 # hyperparemeters arleady in formula
+            # print("\n\n Add repulsive vel: {} \n\n".format(repulsive_velocity))
+            xd_hat[:,n] += R[:,:,n] @ E[:,0,n] * repulsive_velocity
+        
         xd_hat_magnitude[n] = np.sqrt(np.sum(xd_hat[:,n]**2)) 
         if xd_hat_magnitude[n]: # Nonzero hat_magnitude
             xd_hat_normalized = xd_hat[:,n]/xd_hat_magnitude[n] # normalized direction
@@ -152,14 +166,10 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
     xd_hat_magnitude = np.sqrt(np.sum(xd_hat**2, axis=0) )
     
     if N_attr: #nonzero
-
         k_ds = np.hstack((k_ds, np.zeros((d-1, N_attr)) )) # points at the origin
-
         xd_hat_magnitude = np.hstack((xd_hat_magnitude, LA.norm((xd))*np.ones(N_attr) ))
-
         
     # Weighted interpolation for several obstacles
-    weight = weight**weightPow
     if not LA.norm(weight,2):
         warnings.warn('trivial weight.')
     weight = weight/LA.norm(weight,2)
@@ -180,8 +190,6 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
     xd = xd + xd_obs
 
     return xd
-
-
 
 
 def compute_modulation_matrix(x_t, obs, R):
@@ -248,9 +256,10 @@ def compute_modulation_matrix(x_t, obs, R):
         E = np.copy((E_orth))
         E[:,0] = - reference_direction/ref_norm
 
-    
     # Diagonal Eigenvalue Matrix
     if Gamma<=1:# point inside the obstacle
+        # warnings.warn("WARNING -- Gamma < 1")
+        # print("\n\n\nWARNING -- Gamma < 1 \n\n\n")
         delta_eigenvalue = 1 
     else:
         delta_eigenvalue = 1./abs(Gamma)**(1/rho)

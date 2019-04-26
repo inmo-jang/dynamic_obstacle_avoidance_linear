@@ -146,14 +146,14 @@ def compute_eigenvalueMatrix(Gamma, rho=1, dim=2, radialContuinity=True):
          
 
 
-def compute_weights(distMeas, N=0, distMeas_min=1, weightType='inverseGamma', weightPow=2):
+def compute_weights(distMeas, N=0, critical_distance=1, weightType='inverseGamma', weightPow=2):
     # UNTITLED5 Summary of this function goes here
     #   Detailed explanation goes here
 
     distMeas = np.array(distMeas)
     n_points = distMeas.shape[0]
     
-    critical_points = distMeas <= distMeas_min
+    critical_points = distMeas <= critical_distance
     
     if np.sum(critical_points): # at least one
         if np.sum(critical_points)==1:
@@ -161,12 +161,12 @@ def compute_weights(distMeas, N=0, distMeas_min=1, weightType='inverseGamma', we
             return w
         else:
             # TODO: continuous weighting function
-            warnings.warn('Implement continuity of weighting function.')
+            # warnings.warn('Implement continuity of weighting function.')
             w = critical_points*1./np.sum(critical_points)
             return w
         
     if weightType == 'inverseGamma':
-        distMeas = distMeas - distMeas_min
+        distMeas = distMeas - critical_distance
         w = 1/distMeas**weightPow
         w = w/np.sum(w) # Normalization
 

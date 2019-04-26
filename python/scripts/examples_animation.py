@@ -18,12 +18,48 @@ from dynamic_obstacle_avoidance.visualization.animated_simulation import run_ani
 print(' ----- Script <<dynamic simulation>> started. ----- ')
 #############################################################
 # Choose a simulation between 0 and 12
-simulationNumber = 4
+simulationNumber = -1
 
 saveFigures = False
 #############################################################
 
 def main(simulationNumber=0, saveFigures=False):
+    if simulationNumber==-1:
+        # Parallel ellipses; flow going through
+        xAttractor = np.array([0,0])
+
+        th_r0 = 38/180*pi
+        obs = []
+        obs.append(Obstacle(
+            a = [1.2, 0.6],
+            p = [1, 1],
+            x0 = [-3, 0],
+            th_r = 30/180*pi,
+            sf = 1.0,
+            xd = [3,2],
+            w = 6,
+            x_end=10))
+
+        obs.append(Obstacle(
+            a = [2,0.4],
+            p = [1,1],
+            x0 = [2, 0],
+            th_r = 90/180*pi,
+            sf = 1.0,
+            xd =[-2,1],
+            w = -5,
+            x_end = 10))
+
+        xRange = [-5,5]
+        yRange = [-1,7]
+        N = 20
+
+        x_init = samplePointsAtBorder(N, xRange, yRange, obs)
+        # x_init = np.zeros((2,1))
+        # x_init[:,0] = [5, 7-8*1/7]
+
+        run_animation(x_init, obs, xRange=xRange, yRange=yRange, dt=0.005, N_simuMax=1000, convergenceMargin=0.3, sleepPeriod=0.001, RK4_int=True, saveFigure=saveFigures, hide_ticks=False)
+        
     if simulationNumber==0:
         N = 10
         x_init = np.vstack((np.ones(N)*20,
@@ -292,8 +328,11 @@ def main(simulationNumber=0, saveFigures=False):
         obs[1].func_w = func_w2
         obs[1].func_xd = func_xd2
 
-        N = 20
+        N = 30
         x_init = samplePointsAtBorder(N, xRange, yRange)
+        # x_init = np.zeros((2,1))
+        # x_init[:,0] = [8,0]
+        # print('got point')
         collisions = obs_check_collision(x_init, obs)
         x_init = x_init[:,collisions[0]]
 
@@ -341,7 +380,7 @@ def main(simulationNumber=0, saveFigures=False):
 
         run_animation(x_init, obs, xRange=xRange, yRange=yRange, dt=0.001, N_simuMax=1040, convergenceMargin=0.3, sleepPeriod=0.01)
 
-        if True: #save animation
+        if False: #save animation
             anim.ani.save('ani/animation_peopleWalking.mp4', dpi=100, fps=25)
             print('Saving finished.')
 

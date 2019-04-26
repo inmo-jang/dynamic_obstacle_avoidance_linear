@@ -30,7 +30,7 @@ from dynamic_obstacle_avoidance.obstacle_avoidance.linear_modulations import *
 
 plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
 
-def samplePointsAtBorder(N, xRange, yRange):
+def samplePointsAtBorder(N, xRange, yRange, obs=[]):
     # Draw points evenly spaced at border
     dx = xRange[1]-xRange[0]
     dy = yRange[1]-yRange[0]
@@ -39,9 +39,7 @@ def samplePointsAtBorder(N, xRange, yRange):
     N_y = int(np.ceil(dx/(2*(dx+dy))*(N))-0)
 
     x_init = np.vstack((np.linspace(xRange[0],xRange[1], num=N_x), np.ones(N_x)*yRange[0]))
-
-    x_init = np.hstack((x_init, 
-                        np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
+    x_init = np.hstack((x_init, np.vstack((np.linspace(xRange[0],xRange[1], num=N_x),
                                    np.ones(N_x)*yRange[1] )) ))
 
     ySpacing=(yRange[1]-yRange[0])/(N_y+1)
@@ -52,6 +50,10 @@ def samplePointsAtBorder(N, xRange, yRange):
     x_init = np.hstack((x_init, 
                         np.vstack((np.ones(N_y)*xRange[1],
                                    np.linspace(yRange[0]+ySpacing,yRange[1]-ySpacing, num=N_y) )) ))
+
+    if len(obs):
+        collisions = obs_check_collision(x_init, obs) # TODO include in x_init
+        x_init = x_init[:,collisions[0]]
     return x_init
 
 ##### Anmation Function #####
