@@ -19,7 +19,7 @@ namespace Modulation
 		Eigen::DiagonalMatrix<float, 3> diagonal_eigenvalues = compute_diagonal_eigenvalues(distance_to_obstacle);
 
 		// compute the modulation matrix
-		Eigen::Matrix3f modulation_matrix = obstacle.get_orientation() * reference_basis * diagonal_eigenvalues * reference_basis.inverse();
+		Eigen::Matrix3f modulation_matrix = obstacle.get_orientation() * reference_basis * diagonal_eigenvalues * reference_basis.inverse() * obstacle.get_orientation().conjugate();
 		// return all computed elements
 		return std::make_tuple(modulation_matrix, orthogonal_basis, distance_to_obstacle);
 	}
