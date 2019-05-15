@@ -47,6 +47,22 @@ install(TARGETS ${PROJECT_NAME}
   	LIBRARY DESTINATION lib
   	RUNTIME DESTINATION bin)
 
+# Automatically put include path for dependant projects that are linked against SimpleH2TLibrary
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+configure_file(
+    LibraryConfig.cmake.in
+    ${CMAKE_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    @ONLY
+)
+
+export(TARGETS ${PROJECT_NAME} FILE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")  # If there are several targets (e.g., several libraries), you need to list them all here
+
+export(PACKAGE dynamic_obstacle_avoidance)
+
 if (runtests)
 	if (APPLE)
     	add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
