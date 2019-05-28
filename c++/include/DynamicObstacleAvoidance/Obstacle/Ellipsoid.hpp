@@ -15,6 +15,7 @@
 #include "DynamicObstacleAvoidance/Obstacle/Obstacle.hpp"
 #include "DynamicObstacleAvoidance/Utils/MathTools.hpp"
 
+class Agent;
 
 class Ellipsoid: public Obstacle 
 {
@@ -26,6 +27,8 @@ private:
 	bool is_intersecting_ellipsoid(const Ellipsoid& other_obstacle) const;
 
 	Ellipsoid* implicit_clone() const override;
+
+	Eigen::MatrixXd sample_from_parameterization(const int& nb_samples, const bool& is_include_safety_margin) const;
 
 public:
 	explicit Ellipsoid();
