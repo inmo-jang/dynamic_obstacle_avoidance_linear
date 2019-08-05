@@ -1,3 +1,12 @@
+# Changes in this repository
+This repo was forked from https://github.com/epfl-lasa/dynamic_obstacle_avoidance_linear. 
+Currently, I am in the middle of implementing this algorithm to UR5 on ROS, for which I have made some modifications as follows. 
+
+(1) As the original python codes were developed based on Python 3, some functions (e.g. @ operation) were changed to equivalent things for Python 2.7. 
+
+
+---
+
 # ObstacleAvoidance Algorithm
 ---
 This package contains a dynamic obstacle avoidance algorithm for concave and convex obstacles as developped in [1]. The algorithm is an extension of the work of [2].
