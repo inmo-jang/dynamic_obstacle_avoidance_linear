@@ -70,7 +70,8 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
             R[:,:,n] = np.eye(d)
 
         # Move to obstacle centered frame
-        x_t = R[:,:,n].T @ (x-obs[n].x0)
+        # x_t = R[:,:,n].T @ (x-obs[n].x0)
+        x_t = np.matmul( R[:,:,n].T , (x-obs[n].x0) )
         E[:,:,n], D[:,:,n], Gamma[n], E_orth[:,:,n] = compute_modulation_matrix(x_t,obs[n], R[:,:,n])
         
     if N_attr:
@@ -96,10 +97,14 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
         exp_weight = np.exp(-1/obs[n].sigma*(np.max([Gamma[n],1])-1))
         xd_obs_n = exp_weight*(np.array(obs[n].xd) + xd_w)
 
-        xd_obs_n = E_orth[:,:,n].T @ xd_obs_n
+        # xd_obs_n = E_orth[:,:,n].T @ xd_obs_n
+        xd_obs_n = np.matmul( E_orth[:,:,n].T , xd_obs_n )
+
         xd_obs_n[0] = np.max(xd_obs_n[0], 0) # Onl use orthogonal part 
-        xd_obs_n = E_orth[:,:,n] @ xd_obs_n
-        
+        # xd_obs_n = E_orth[:,:,n] @ xd_obs_n
+
+        xd_obs_n = np.matmul( E_orth[:,:,n] , xd_obs_n )
+
         xd_obs = xd_obs + xd_obs_n*weight[n]
 
     xd = xd-xd_obs #computing the relative velocity with respect to the obstacle
@@ -122,9 +127,14 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
     k_ds = np.zeros((d-1, N_obs))
         
     for n in range(N_obs):
-        M[:,:,n] = R[:,:,n] @ E[:,:,n] @ D[:,:,n] @ LA.pinv(E[:,:,n]) @ R[:,:,n].T
-        
-        xd_hat[:,n] = M[:,:,n] @ xd # velocity modulation
+        # M[:,:,n] = R[:,:,n] @ E[:,:,n] @ D[:,:,n] @ LA.pinv(E[:,:,n]) @ R[:,:,n].T
+
+        M[:,:,n] = np.matmul( R[:,:,n] , np.matmul( E[:,:,n] , np.matmul( D[:,:,n] , np.matmul( LA.pinv(E[:,:,n]) , R[:,:,n].T ) ) ) )
+
+
+        # xd_hat[:,n] = M[:,:,n] @ xd # velocity modulation
+        xd_hat[:,n] = np.matmul( M[:,:,n] , xd ) # velocity modulation
+
         xd_hat_magnitude[n] = np.sqrt(np.sum(xd_hat[:,n]**2)) 
         if xd_hat_magnitude[n]: # Nonzero hat_magnitude
             xd_hat_normalized = xd_hat[:,n]/xd_hat_magnitude[n] # normalized direction
@@ -134,7 +144,8 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
         if not d==2:
             warnings.warn('not implemented for d neq 2')
 
-        xd_hat_normalized_velocityFrame = Rf @ xd_hat_normalized
+        # xd_hat_normalized_velocityFrame = Rf @ xd_hat_normalized
+        xd_hat_normalized_velocityFrame = np.matmul( Rf , xd_hat_normalized)
 
         # Kappa space - directional space
         k_fn = xd_hat_normalized_velocityFrame[1:]
@@ -170,9 +181,13 @@ def obs_avoidance_interpolation_moving(x, xd, obs=[], attractor='none', weightPo
     norm_kd = LA.norm(k_d)
     
     if norm_kd: # Nonzero
-        n_xd = Rf.T @ np.hstack((np.cos(norm_kd), np.sin(norm_kd)/norm_kd*k_d ))
+        # n_xd = Rf.T @ np.hstack((np.cos(norm_kd), np.sin(norm_kd)/norm_kd*k_d ))
+        n_xd = np.matmul( Rf.T , np.hstack((np.cos(norm_kd), np.sin(norm_kd)/norm_kd*k_d )) )
+    
     else:
-        n_xd = Rf.T @ np.hstack((1, k_d ))
+        # n_xd = Rf.T @ np.hstack((1, k_d ))
+        n_xd = np.matmul( Rf.T , np.hstack((1, k_d )) )
+
 
     xd = xd_magnitude*n_xd.squeeze()
 
@@ -223,7 +238,9 @@ def compute_modulation_matrix(x_t, obs, R):
     normal_vector = normal_vector/LA.norm(normal_vector)
 
     if hasattr(obs,'center_dyn'):  # automatic adaptation of center 
-        reference_direction = - (x_t - R.T @ (np.array(obs.center_dyn) - np.array(obs.x0)) )
+        # reference_direction = - (x_t - R.T @ (np.array(obs.center_dyn) - np.array(obs.x0)) )
+        reference_direction = - (x_t - np.matmul( R.T , (np.array(obs.center_dyn) - np.array(obs.x0)) ) )
+
     else:
         reference_direction = - x_t
 

@@ -69,8 +69,10 @@ def get_radius(vec_ref2point, vec_cent2ref=[], a=[], obs=[]):
         rotMat = np.array([[np.cos(ang_tot), np.sin(ang_tot)],
                            [-np.sin(ang_tot), np.cos(ang_tot)]])
 
-        vec_ref2dir = rotMat @ dir_surf_cone[:, 0]
-        
+        # vec_ref2dir = rotMat @ dir_surf_cone[:, 0]
+        vec_ref2dir = np.matmul(rotMat , dir_surf_cone[:, 0])
+
+
         vec_ref2dir /= LA.norm(vec_ref2dir) # nonzero value expected
         
         rad_ref2 = get_radius_ellipsoid(vec_ref2dir, a)
@@ -229,7 +231,9 @@ def obs_check_collision_2d(obs_list, XX, YY):
         # on the surface, we have: \Gamma = \sum_{i=1}^d (xt_i/a_i)^(2p_i) == 1
         R = compute_R(d,obs_list[it_obs].th_r)
 
-        Gamma = np.sum( ( 1/obs_list[it_obs].sf * R.T @ (points - np.tile(np.array([obs_list[it_obs].x0]).T,(1,N_points) ) ) / np.tile(np.array([obs_list[it_obs].a]).T, (1, N_points)) )**(np.tile(2*np.array([obs_list[it_obs].p]).T, (1,N_points)) ), axis=0 )
+        # Gamma = np.sum( ( 1/obs_list[it_obs].sf * R.T @ (points - np.tile(np.array([obs_list[it_obs].x0]).T,(1,N_points) ) ) / np.tile(np.array([obs_list[it_obs].a]).T, (1, N_points)) )**(np.tile(2*np.array([obs_list[it_obs].p]).T, (1,N_points)) ), axis=0 )
+        Gamma = np.sum( ( 1/obs_list[it_obs].sf * np.matmul(R.T , (points - np.tile(np.array([obs_list[it_obs].x0]).T,(1,N_points) ) ) ) / np.tile(np.array([obs_list[it_obs].a]).T, (1, N_points)) )**(np.tile(2*np.array([obs_list[it_obs].p]).T, (1,N_points)) ), axis=0 )
+
 
         noColl = (noColl* Gamma>1)
 
@@ -253,7 +257,9 @@ def obs_check_collision(points, obs_list=[]):
         # \Gamma = \sum_{i=1}^d (xt_i/a_i)^(2p_i) = 1
         R = compute_R(dim,obs_list[it_obs].th_r)
 
-        Gamma = sum( ( 1/obs_list[it_obs].sf * R.T @ (points - np.tile(np.array([obs_list[it_obs].x0]).T,(1,N_points) ) ) / np.tile(np.array([obs_list[it_obs].a]).T, (1, N_points)) )**(np.tile(2*np.array([obs_list[it_obs].p]).T, (1,N_points)) ) )
+        # Gamma = sum( ( 1/obs_list[it_obs].sf * R.T @ (points - np.tile(np.array([obs_list[it_obs].x0]).T,(1,N_points) ) ) / np.tile(np.array([obs_list[it_obs].a]).T, (1, N_points)) )**(np.tile(2*np.array([obs_list[it_obs].p]).T, (1,N_points)) ) )
+        Gamma = sum( ( 1/obs_list[it_obs].sf * np.matmul(R.T , (points - np.tile(np.array([obs_list[it_obs].x0]).T,(1,N_points) ) ) ) / np.tile(np.array([obs_list[it_obs].a]).T, (1, N_points)) )**(np.tile(2*np.array([obs_list[it_obs].p]).T, (1,N_points)) ) )
+
 
         noColl = (noColl* Gamma>1)
 

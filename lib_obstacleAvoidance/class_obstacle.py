@@ -126,12 +126,17 @@ class Obstacle:
             self.sf = 1
             
         if type(self.sf) == int or type(self.sf) == float:
-            x_obs_sf = R @ (self.sf*x_obs) + np.tile(np.array([self.x0]).T,(1,numPoints))
-        else:
-            x_obs_sf = R @ (x_obs*np.tile(self.sf,(1,numPoints))) + np.tile(self.x0, (numPoints,1)).T 
+            # x_obs_sf = R @ (self.sf*x_obs) + np.tile(np.array([self.x0]).T,(1,numPoints))
+            x_obs_sf = np.matmul(R, (self.sf*x_obs)) + np.tile(np.array([self.x0]).T,(1,numPoints))
 
-        x_obs = R @ x_obs + np.tile(np.array([self.x0]).T,(1,numPoints))
-        
+        else:
+            # x_obs_sf = R @ (x_obs*np.tile(self.sf,(1,numPoints))) + np.tile(self.x0, (numPoints,1)).T 
+            x_obs_sf = np.matmul(R, (x_obs*np.tile(self.sf,(1,numPoints)))) + np.tile(self.x0, (numPoints,1)).T 
+
+
+        # x_obs = R @ x_obs + np.tile(np.array([self.x0]).T,(1,numPoints))
+        x_obs = np.matmul(R, x_obs) + np.tile(np.array([self.x0]).T,(1,numPoints))
+
         if sum(a_temp) == 0:
             self.x_obs = x_obs.T.tolist()
             self.x_obs_sf = x_obs_sf.T.tolist()
